@@ -546,6 +546,13 @@ key to unlock the GPG keychain::
   # shell.
   pg_ctl -D [...] start
 
+Server Side Encryption on S3, using KMS
+'''''''''''''''''''''''''''''''''''''''
+
+By default wal-e encrypts data using SSE-S3 by boto, we can use KMS-SSE by patched boto version only https://github.com/serjs/boto
+
+To enable KMS-SSE, we need to set ``WALE_S3_ENDPOINT`` environment
+variable, to ensure that data always send by SSE-KMS, we can additionally create bucket policy: see http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingKMSEncryption.html for details
 
 Controlling the I/O of a Base Backup
 ''''''''''''''''''''''''''''''''''''

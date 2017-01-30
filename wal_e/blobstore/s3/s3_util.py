@@ -15,6 +15,7 @@ from wal_e.piper import PIPE
 from wal_e.retries import retry, retry_with_count
 
 logger = log_help.WalELogger(__name__)
+kms_key_id = os.getenv('KMS_KEY_ID')
 
 # Set a timeout for boto HTTP operations should no timeout be set.
 # Yes, in the case the user *wanted* no timeouts, this would set one.
@@ -38,7 +39,7 @@ def _uri_to_key(creds, uri, conn=None):
     return boto.s3.key.Key(bucket=bucket, name=url_tup.path)
 
 
-def uri_put_file(creds, uri, fp, content_type=None, conn=None):
+def uri_put_file(creds, uri, fp, content_encoding=None, conn=None):
     # Per Boto 2.2.2, which will only read from the current file
     # position to the end.  This manifests as successfully uploaded
     # *empty* keys in S3 instead of the intended data because of how
@@ -51,10 +52,13 @@ def uri_put_file(creds, uri, fp, content_type=None, conn=None):
 
     k = _uri_to_key(creds, uri, conn=conn)
 
-    if content_type is not None:
-        k.content_type = content_type
+    if content_encoding is not None:
+        k.content_type = content_encoding
 
-    k.set_contents_from_file(fp, encrypt_key=True)
+    if  kms_key_id:
+        k.set_contents_from_file(fp, headers={'x-amz-server-side-encryption': 'aws:kms','x-amz-server-side-encryption-aws-kms-key-id': kms_key_id})
+    else:
+        k.set_contents_from_file(fp, encrypt_key=True)
     return k
 
 
